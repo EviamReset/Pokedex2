@@ -119,9 +119,14 @@ class PokemonController extends Controller
             $stmt2 = $pdo->prepare("DELETE FROM pokemons WHERE id = :id");
             $stmt2->execute(['id' => $id]);
 
-            return response()->json(['mensaje' => 'Pokémon eliminado correctamente'], 200);
+            return redirect()->back()->with('success', 'Pokémon agregado correctamente');
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al eliminar el Pokémon', 'details' => $e->getMessage()], 400);
         }
+    }
+
+    public function update ()
+    {
+
     }
 }
