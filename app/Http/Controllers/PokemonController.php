@@ -125,8 +125,59 @@ class PokemonController extends Controller
         }
     }
 
-    public function update ()
+    public function update (Request $request, $id)
     {
+        // dd($request->all());
 
+        $pdo = DB::connection()->getPdo();
+        $stmt = $pdo->prepare("UPDATE pokemons 
+                                SET name = :name, hp = :hp, attack = :attack, defense = :defense, speed = :speed
+                                WHERE id = :id
+                            ");
+        $stmt->execute([
+            'id' => $id,
+            'name' => $request->input('name'),
+            'hp' => $request->input('hp'),
+            'attack' => $request->input('attack'),
+            'defense' => $request->input('defense'),
+            'speed' => $request->input('speed')
+        ]);
+
+        // TYPES UPDATE LOGIC
+
+        $stmt = $pdo->prepare("SELECT id, type_id FROM pokemon_types WHERE pokemon_id = :pokemon_id");
+        $stmt->execute(['pokemon_id' => $id]);
+        $currentTypes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $newTypes = $request->input('types');
+
+        //array_diff($newTypes, $currentTypes) = Los type_id que hay que insertar.
+        //array_diff($currentTypes, $newTypes) = Los type_id que hay que eliminar.
+
+        $typesToAdd = array_diff($newTypes, $currentTypes);
+        $typesToRemove = array_diff($currentTypes, $newTypes);
+
+        if (!empty($typesToAdd)) {
+            $stmt = $pdo->prepare("INSERT INTO pokemon_types (pokemon_id, type_id) VALUES (:pokemon_id, :type_id)");
+            foreach ($typesToAdd as $typeId) {
+                $stmt->execute([
+                    'pokemon_id' => $id,
+                    'type_id' => $typeId
+                ]);
+            }
+        }
+
+        if (!empty($typesToRemove)) {
+            $stmt = $pdo->prepare("DELETE FROM pokemon_types WHERE pokemon_id = :pokemon_id AND type_id = :type_id");
+            foreach ($typesToRemove as $typeId) {
+                $stmt->execute([
+                    'pokemon_id' => $id,
+                    'type_id' => $typeId
+                ]);
+            }
+        }
+        
+
+        return redirect()->back()->with('success', 'Pokémon actualizado correctamente');
     }
 }
