@@ -34,7 +34,14 @@
                                 @endforeach
                             </td>
                             <td>
-                                <button class="btn btn-danger">delete</button>
+                                <form action="{{ route('pokemon.destroy', $pokemon->id) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger">
+                                        delete
+                                    </button>
+                                </form>
+                                
                             </td>
                             <td>
                                 <button class="btn btn-warning">edit</button>
