@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PokemonResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,10 +16,13 @@ class PokemonController extends Controller
         $pdo = DB::connection()->getPdo();
         $stmt = $pdo->prepare("SELECT * FROM pokemons");
         $stmt->execute();
-        $pokemons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pokemons = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-        return view('pokemons.components.table', compact('pokemons'));
-        // return response()->json($pokemon);
+        $stmt = $pdo->prepare("SELECT * FROM types");
+        $stmt->execute();
+        $types = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        return view('components.table', compact('pokemons', 'types'));
     }
 
     public function pokemonsWithTypes()
@@ -40,14 +44,20 @@ class PokemonController extends Controller
                                 GROUP BY p.id, p.name, p.hp, p.attack, p.defense, p.speed
     ");
         $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pokemons = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Convertir la cadena `types` en un array JSON válido
-        foreach ($result as &$row) {
+        foreach ($pokemons as &$row) {
             $row['types'] = json_decode($row['types'], true);
         }
 
-        return response()->json($result);
+        $pokemons = json_decode(json_encode($pokemons));
+
+        $stmt = $pdo->prepare("SELECT * FROM types");
+        $stmt->execute();
+        $types = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        return view('components.table', compact('pokemons', 'types'));
     }
 
 
@@ -63,7 +73,7 @@ class PokemonController extends Controller
 
     public function create()
     {
-
+        
     }
 
     public function destroy($id)

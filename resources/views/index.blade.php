@@ -11,7 +11,12 @@
 <body>
     <h1>Hi from Laravel</h1>
 
+    <button>
+        <a href="{{ url('/table') }}">Table</a>
+    </button>
+
     <div class="container">
+        @yield('modal')
         @yield('content')
     </div>
 
