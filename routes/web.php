@@ -9,3 +9,4 @@ Route::get('/', function () {
 
 
 Route::get('/table', [PokemonController::class, 'pokemonsWithTypes']);
+Route::post('/store', [PokemonController::class, 'store'])->name('pokemon.store');

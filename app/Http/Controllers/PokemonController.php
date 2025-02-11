@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 use PDO;
 
+use function PHPUnit\Framework\returnSelf;
+
 class PokemonController extends Controller
 {
     public function index()
@@ -22,7 +24,9 @@ class PokemonController extends Controller
         $stmt->execute();
         $types = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-        return view('components.table', compact('pokemons', 'types'));
+        return $pokemons;
+
+        // return view('components.table', compact('pokemons', 'types'));
     }
 
     public function pokemonsWithTypes()
@@ -57,6 +61,8 @@ class PokemonController extends Controller
         $stmt->execute();
         $types = $stmt->fetchAll(PDO::FETCH_OBJ);
 
+        // return $pokemons;
+
         return view('components.table', compact('pokemons', 'types'));
     }
 
@@ -71,9 +77,33 @@ class PokemonController extends Controller
         return response()->json($pokemon);
     }
 
-    public function create()
+    public function store(Request $request)
     {
+        // dd($request->all());
+        $pdo = DB::connection()->getPdo();
+        $stmt = $pdo->prepare("INSERT INTO pokemons (name, hp, attack, defense, speed) values (:name, :hp, :attack, :defense, :speed)");
+        $stmt->execute([
+            'name' => $request->input('name'),
+            'hp' => $request->input('hp'),
+            'attack' => $request->input('attack'),
+            'defense' => $request->input('defense'),
+            'speed' => $request->input('speed')
+        ]);
+
+        $pokemonId = $pdo->lastInsertId();
+
+        $types = $request->input('types');
         
+        foreach ($types as $type)
+        {
+            $stmt = $pdo->prepare("INSERT INTO pokemon_types (pokemon_id, type_id) VALUES (:pokemon_id, :type_id)");
+            $stmt->execute([
+            'pokemon_id' => $pokemonId,
+            'type_id' => $type
+            ]);
+        }
+    
+        return redirect()->back()->with('success', 'Pokémon agregado correctamente');
     }
 
     public function destroy($id)
