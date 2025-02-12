@@ -143,21 +143,41 @@ class PokemonController extends Controller
             'speed' => $request->input('speed')
         ]);
 
-        // TYPES UPDATE LOGIC
+        $stmt = $pdo->prepare("SELECT id, type_id FROM pokemon_types WHERE pokemon_id = :pokemon_id");
+        $stmt->execute(['pokemon_id' => $id]);
+        $currentTypes_assoc = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $currentTypeIds = array_column($currentTypes_assoc, 'type_id');
+
+        // dd($currentTypeIds);
 
         $stmt = $pdo->prepare("SELECT id, type_id FROM pokemon_types WHERE pokemon_id = :pokemon_id");
         $stmt->execute(['pokemon_id' => $id]);
         $currentTypes = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
+        // dd($currentTypes);
+
         $newTypes = $request->input('types');
 
-        //array_diff($newTypes, $currentTypes) = Los type_id que hay que insertar.
-        //array_diff($currentTypes, $newTypes) = Los type_id que hay que eliminar.
+        $typesToAdd = array_diff($newTypes, $currentTypeIds);
+        $typesToRemove = array_diff($currentTypeIds, $newTypes);
 
-        $typesToAdd = array_diff($newTypes, $currentTypes);
-        $typesToRemove = array_diff($currentTypes, $newTypes);
+        // dd($typesToRemove);
 
-        if (!empty($typesToAdd)) {
+        $current_length = count($currentTypeIds);
+        $new_length = count($newTypes);
+
+        // ARRAYS MISMA LONGITUD
+
+        if ($current_length == $new_length)
+        {
+            $stmt = $pdo->prepare("DELETE FROM pokemon_types WHERE pokemon_id = :pokemon_id AND type_id = :type_id");
+            foreach ($typesToRemove as $typeId) {
+                $stmt->execute([
+                    'pokemon_id' => $id,
+                    'type_id' => $typeId
+                ]);
+            }
+
             $stmt = $pdo->prepare("INSERT INTO pokemon_types (pokemon_id, type_id) VALUES (:pokemon_id, :type_id)");
             foreach ($typesToAdd as $typeId) {
                 $stmt->execute([
@@ -167,7 +187,10 @@ class PokemonController extends Controller
             }
         }
 
-        if (!empty($typesToRemove)) {
+        // ARRAYS CON DIFERENTE LONGITUD
+
+        if ($current_length > $new_length)
+        {
             $stmt = $pdo->prepare("DELETE FROM pokemon_types WHERE pokemon_id = :pokemon_id AND type_id = :type_id");
             foreach ($typesToRemove as $typeId) {
                 $stmt->execute([
@@ -176,7 +199,17 @@ class PokemonController extends Controller
                 ]);
             }
         }
-        
+
+        if ($current_length < $new_length)
+        {
+            $stmt = $pdo->prepare("INSERT INTO pokemon_types (pokemon_id, type_id) VALUES (:pokemon_id, :type_id)");
+            foreach ($typesToAdd as $typeId) {
+                $stmt->execute([
+                    'pokemon_id' => $id,
+                    'type_id' => $typeId
+                ]);
+            }
+        }
 
         return redirect()->back()->with('success', 'Pokémon actualizado correctamente');
     }
