@@ -44,12 +44,11 @@
                                 
                             </td>
                             <td>
-                                <button class="btn btn-warning">edit</button>
+                                @include('components.editModal', ['pokemon' => $pokemon])
+                                {{-- <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal">edit</button> --}}
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
-
-        
+            </table>    
 @endsection
