@@ -34,15 +34,21 @@
                                 @endforeach
                             </td>
                             <td>
-                                <button class="btn btn-danger">delete</button>
+                                <form action="{{ route('pokemon.destroy', $pokemon->id) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger">
+                                        delete
+                                    </button>
+                                </form>
+                                
                             </td>
                             <td>
-                                <button class="btn btn-warning">edit</button>
+                                @include('components.editModal', ['pokemon' => $pokemon])
+                                {{-- <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal">edit</button> --}}
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
-
-        
+            </table>    
 @endsection
